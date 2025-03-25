@@ -16,19 +16,21 @@
 
 
 -------------------------------------------------------------------------------------------------
+
+
 ##   TASK 1 : WITH/WITHOUT MASK CLASSIFICATION USING HAND CRAFTED FEATURE EXTRACTION TECHNIQUES.
 
 ### INTRODUCTION :
 This task is to classify the images of people with_mask and without_mask without using a convolutional neural network . Normally a CNN does feature extraction but here it should be done by us and the give the features extracted to a __SVM classifier__ or a __Multi Layer Perceptron__  to classify the images with_mask and without_mask .
 
 
-## Prerequisites
+## PREREQUISITES
 Ensure you have the following dependencies installed:
 ```bash
 pip install opencv-python numpy matplotlib seaborn scikit-image scikit-learn
 ```
 
-## Code Explanation
+## CODE EXPLANATION
 
 ### 1. Importing Required Libraries
 ```python
@@ -168,10 +170,9 @@ The **ROC Curve** is a graphical representation of a classifier’s performance 
 - **True Positive Rate (TPR) (Sensitivity)** on the Y-axis  
 - **False Positive Rate (FPR)** on the X-axis
 - Higher AUC → Better Model Performance
-## Summary
-We used **handcrafted features**, including color histograms, LBP, GLCM, and HOG. These features effectively distinguish masked and unmasked faces. The **3-layer MLP** further improves classification by learning complex patterns in the feature space.
 
-## Conclusion
+## CONCLUSION :
+We used **handcrafted features**, including color histograms, LBP, GLCM, and HOG. These features effectively distinguish masked and unmasked faces. The **3-layer MLP** further improves classification by learning complex patterns in the feature space.
 This project successfully classifies images with and without masks using **SVM** and **MLP** with a high accuracy of **~99%** due to effective feature extraction and model tuning.
 
 
@@ -611,7 +612,7 @@ if best_image:
 
 ---
 
-## **Summary**
+## **CONCLUSION**
 
 - Implemented **region growing segmentation**.
 - Used **seed selection** and **intensity thresholding**.
@@ -807,9 +808,6 @@ if best_image:
 ### INTRODUCTION :
 U-net is a convolutional neural network which is used for image segmetation . It was introduced in 2015 .The name U-net comes from it's __U__ shaped architecture with symmetric encoder-decoder structure. In the encoder side we do the contraction and on the decoder side we do the expansion . We also use the skip connections to the decoder layer from the corresponding encoder layer . In the Unet each pixel is categorized as fore-ground and back-ground .
 
-### DATASET :
- - The dataset contains face_crop and face_crop segmented folders which are the segmented and corresponding  non-segmented images of a person with mask .
- - The face_crop directory is the X and face_crop_segmentation directory is the target Y.
 ### WORKING :
  - U-Net is a seguence of __conv-conv-pooling__ layers.It has 2 parts . Left side--> contraction , right_side--> expansion paths.
  - In the left side the unet extracts important features . Convolution detects small patterns like edges textures (nose,ears,mouthetc.,.) and pooling reduces the image size to maintain __translational invariance__ .
