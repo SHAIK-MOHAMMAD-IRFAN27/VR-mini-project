@@ -41,9 +41,9 @@ The tasl is yo classify the images of people with_mask and without_mask.The CNN 
     
                 print(f"Downloaded: {img_name}")
     
-        print("✅ All images saved in Google Drive!")
+        print(" All images saved in Google Drive!")
     else:
-        print("❌ Failed to fetch file list. Check the repository URL or API rate limits.")
+        print(" Failed to fetch file list. Check the repository URL or API rate limits.")
     
 
   - Install all the dependencies of libraries and import the libraries .
@@ -136,6 +136,98 @@ The tasl is yo classify the images of people with_mask and without_mask.The CNN 
 - feature_maps = 32-->64-->128-->256
 - learning_rate_scheduler = monitor val_loss and if it doesn't chage for 3 epochs decrease the learning rate by a factor of 1/2.
 - accuracy: 0.9893 - loss: 0.4554 - precision: 0.9891 - recall: 0.9889 - val_accuracy: 0.8625 - val_loss: 6.9310 - val_precision: 0.7935 - val_recall: 0.9800 - learning_rate: 5.0000e-04
+- Test Accuracy: 0.840  ,Test Precision: 0.761 ,Test Recall: 0.9900
+## MODEL 2 :
+  - Activation = Leaky_Relu
+  - Optimizer = SGD with momentum=0.9
+  - Regularization = Dropout 0.5 and 0.25
+  - Normalization = BatchNorm
+  - Batch_size = 16
+  - Number of epochs trained = 10
+  - Number of layers = 4 Convolution , 1 dense , 1 output
+  - Output Activation = Sigmoid
+  - loss = Binary_crossentropy
+  - Total number of parameters = 22,576,833
+  - Metrics = Accuracy , precision , Recall
+  - Pooling filter_size = (5,5)-->(5,5)-->(3,3)-->(3,3)
+  - feature_maps = 32-->64-->128-->256
+  - learning_rate_scheduler = monitor val_loss and if it doesn't chage for 3 epochs decrease the learning rate by a factor of 1/2.
+  - accuracy: accuracy: 0.9797 - loss: 0.8187 - precision_1: 0.9818 - recall_1: 0.9766 - val_accuracy: 0.9525 - val_loss: 1.0962 - val_precision_1: 0.9738 - val_recall_1: 0.9300 - learning_rate: 0.0100
+  - Test Accuracy: 0.9600 , Test Precision: 0.9792 ,Test Recall: 0.9400
+## MODEL 3 :
+  - Activation = Relu
+  - Optimizer = RMSPROP with initial_lr=0.001
+  - Regularization = Dropout 0.5 and 0.25
+  - Normalization = BatchNorm
+  - Batch_size = 64
+  - Number of epochs trained = 10
+  - Number of layers = 4 Convolution , 1 dense , 1 output
+  - Output Activation = Sigmoid
+  - loss = Binary_crossentropy
+  - Total number of parameters = 22,576,833
+  - Metrics = Accuracy , precision , Recall
+  - Pooling filter_size = (5,5)-->(5,5)-->(3,3)-->(3,3)
+  - feature_maps = 32-->64-->128-->256
+  - learning_rate_scheduler = monitor val_loss and if it doesn't chage for 3 epochs decrease the learning rate by a factor of 1/2.
+  - accuracy: 0.9884 - loss: 0.7657 - precision_2: 0.9866 - recall_2: 0.9897 - val_accuracy: 0.9750 - val_loss: 1.8097 - val_precision_2: 0.9657 - val_recall_2: 0.9850 - learning_rate: 5.0000e-04
+  - Test Accuracy: 0.9650 , Test Precision: 0.9697 ,Test Recall: 0.9600
+
+## MODEL 4 :
+  - Activation = Relu
+  - Optimizer = ADAM with initial_lr=0.001
+  - Regularization = Dropout 0.5 and 0.25
+  - Normalization = BatchNorm
+  - Batch_size = 32
+  - Number of epochs trained = 10
+  - Number of layers = 4 Convolution , 1 dense , 1 output
+  - Output Activation = TANH
+  - loss = Binary_crossentropy
+  - Total number of parameters = 22,576,833
+  - Metrics = Accuracy , precision , Recall
+  - Pooling filter_size = (5,5)-->(5,5)-->(3,3)-->(3,3)
+  - feature_maps = 32-->64-->128-->256
+  - learning_rate_scheduler = monitor val_loss and if it doesn't chage for 3 epochs decrease the learning rate by a factor of 1/2.
+  - accuracy: 0.9394 - loss: 0.3916 - precision: 0.9323 - recall: 0.9452 - val_accuracy: 0.8850 - val_loss: 0.5162 - val_precision: 0.8208 - val_recall: 0.9850 - learning_rate: 0.0010
+  - Test Accuracy: 0.9100 , Test Precision: 0.8475 ,Test Recall: 1.000
+
+## MODEL 5 :
+  - Activation = Leaky_Relu
+  - Optimizer = ADAGRAD with initial_lr=0.01
+  - Regularization = Dropout 0.5 and 0.25
+  - Normalization = BatchNorm
+  - Batch_size = 16
+  - Number of epochs trained = 10
+  - Number of layers = 4 Convolution , 1 dense , 1 output
+  - Output Activation = SOFTMAX
+  - loss = categorical_crossentropy
+  - Total number of parameters = 22,576,833
+  - Metrics = Accuracy , precision , Recall
+  - Pooling filter_size = (5,5)-->(5,5)-->(3,3)-->(3,3)
+  - feature_maps = 32-->64-->128-->256
+  - learning_rate_scheduler = monitor val_loss and if it doesn't chage for 3 epochs decrease the learning rate by a factor of 1/2.
+  - accuracy: 0.9942 - loss: 0.3422 - precision_3: 0.9942 - recall_3: 0.9942 - val_accuracy: 0.9350 - val_loss: 1.0558 - val_precision_3: 0.9350 - val_recall_3: 0.9350 - learning_rate: 0.0050
+  - Test Accuracy: 0.9550 , Test Precision: 0.9550 ,Test Recall: 0.9550
+## MODEL 6 :
+  - Activation = Relu
+  - Optimizer = ADADELTA with initial_lr=1.0
+  - Regularization = Dropout 0.5 and 0.25
+  - Normalization = BatchNorm
+  - Batch_size = 64
+  - Number of epochs trained = 10
+  - Number of layers = 4 Convolution , 1 dense , 1 output
+  - Output Activation = SOFTMAX
+  - loss = categorical_crossentropy
+  - Total number of parameters = 22,576,833
+  - Metrics = Accuracy , precision , Recall
+  - Pooling filter_size = (5,5)-->(5,5)-->(3,3)-->(3,3)
+  - feature_maps = 32-->64-->128-->256
+  - learning_rate_scheduler = monitor val_loss and if it doesn't chage for 3 epochs decrease the learning rate by a factor of 1/2.
+  - accuracy: 0.9926 - loss: 0.3769 - precision_5: 0.9926 - recall_5: 0.9926 - val_accuracy: 0.9600 - val_loss: 0.9102 - val_precision_5: 0.9600 - val_recall_5: 0.9600 - learning_rate: 0.2500
+  - Test Accuracy: 0.9700 , Test Precision: 0.9700 ,Test Recall: 0.9700
+
+
+
     
     
-    
+      
+      
