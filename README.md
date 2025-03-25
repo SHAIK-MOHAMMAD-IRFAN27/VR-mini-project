@@ -96,7 +96,46 @@ The tasl is yo classify the images of people with_mask and without_mask.The CNN 
   - We have to scale the data of images to between 0 and 1 . so divide the data x by 255.0
   - 
   - We have to split the data into train , test , validation data with a stratification so that imbalance in data doesn't happen .
-  - To make this .
+  - To make this
+1. Convert dataset into a numpy array
+   ```sh
+   X = []
+   y = []
+   for img_batch, label_batch in data.as_numpy_iterator():
+       X.extend(img_batch)
+       y.extend(label_batch)
+   X = np.array(X)
+   y = np.array(y)
+
+2. split the dataset 70%--> train , 20%-->validation and 10% --> test data .
+   ```sh
+   X_train, X_temp, y_train, y_temp = train_test_split(X, y, test_size=0.3, stratify=y, random_state=42)
+   X_val, X_test, y_val, y_test = train_test_split(X_temp, y_temp, test_size=1/3, stratify=y_temp, random_state=42)
+   print("Train class distribution:", np.bincount(y_train))
+   print("Validation class distribution:", np.bincount(y_val))
+   print("Test class distribution:", np.bincount(y_test))
+3. Again make the splitted dataset into a tensorflow batches pf size=32
+   ```sh
+   train_ds = tf.data.Dataset.from_tensor_slices((X_train, y_train)).batch(32)
+   val_ds = tf.data.Dataset.from_tensor_slices((X_val, y_val)).batch(32)
+   test_ds = tf.data.Dataset.from_tensor_slices((X_test, y_test)).batch(32)
+# CREATE A CNN MODEL
+## MODEL 1 :
+- Activation =Relu
+- Optimizer = Adam with initial_lr=0.001
+- Regularization = Dropout
+- Normalization = BatchNorm
+- Batch_size = 32
+- Number of epochs trained = 10
+- Number of layers = 4 Convolution , 1 dense , 1 output
+- Output Activation = Sigmoid
+- loss = Binary_crossentropy
+- Total number of parameters = 22,576,833
+- Metrics = Accuracy , precision , Recall
+- Pooling filter_size = (5,5)-->(5,5)-->(3,3)-->(3,3)
+- feature_maps = 32-->64-->128-->256
+- learning_rate_scheduler = monitor val_loss and if it doesn't chage for 3 epochs decrease the learning rate by a factor of 1/2.
+- accuracy: 0.9893 - loss: 0.4554 - precision: 0.9891 - recall: 0.9889 - val_accuracy: 0.8625 - val_loss: 6.9310 - val_precision: 0.7935 - val_recall: 0.9800 - learning_rate: 5.0000e-04
     
     
     
