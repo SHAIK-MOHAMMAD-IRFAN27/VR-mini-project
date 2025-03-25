@@ -21,6 +21,10 @@
 ### INTRODUCTION :
 
 
+
+
+
+-------------------------------------------------------------------------------------------------
 ##  TASK 2 : WITH/WITHOUT MASK CLASSIFICATION USING CONVOLUTIONAL NEURAL NETWORKS
 ### INTRODUCTION :
 The tasK is yo classify the images of people with_mask and without_mask.The CNN architecture contains 2 tasks . One is convolution and other is pooling . Convolution is used for FEATURE_EXTRACTION where as pooling is used for spacial reduction and making it a translational_invariant.
@@ -622,7 +626,7 @@ if best_image:
 
 ---
 
-## **Summary**
+## **CONCLUSION**
 
 - Implemented **GrabCut segmentation**.
 - Used **bounding box initialization**.
