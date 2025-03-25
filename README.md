@@ -244,8 +244,378 @@ The tasl is yo classify the images of people with_mask and without_mask.The CNN 
 3. __SGD MOMENTUM__ worked well because momentum = 0.9 means each time we are telling it to move in the direction of the gradient with 0.9 confidence means __new_W=old_W + (delta_W+0.9*delta_W )__. But it may have oscillations.
 4. __RMSPROP__ also worked well but not as good as __ADADELTA__ because it has the initialization of learning rate issues . 
 
+### CONCLUSION :
 
+
+
+
+
+
+
+-------------------------------------------------------------------------------------------------
+
+
+## TASK 3 : REGION BASED SEGMENTATION USING TRADITIONAL TECHNIQUES
+
+
+## **Objective**
+
+### Implement a region-based segmentation method (e.g., thresholding, edge detection) to segment the mask regions for faces identified as "with mask." Visualize and evaluate the segmentation results.
+
+---
+
+## **Implementation Details**
+## **1.Region Growing Segmentation**
+### **1. Mounting Google Drive**
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+```
+
+- Google Drive is mounted to access image files stored in the cloud.
+- This allows easy retrieval and storage of segmentation results.
+
+### **2. Defining Paths for Input and Output Data**
+
+```python
+import os
+
+# Paths
+image_folder = "/content/drive/MyDrive/MSFD/1/face_crop/"
+mask_gt_folder = "/content/drive/MyDrive/MSFD/1/face_crop_segmentation/"
+region_growing_output_folder = "/content/drive/MyDrive/MSFD/1/region_growing_masks/"
+
+os.makedirs(region_growing_output_folder, exist_ok=True)
+```
+
+- The **image_folder** stores images of faces.
+- The **mask_gt_folder** stores ground truth segmentation masks.
+- The **region_growing_output_folder** is created to store the segmentation results.
+
+### **3. Listing Image and Mask Files**
+
+```python
+image_files = [f for f in os.listdir(image_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+mask_files = [f for f in os.listdir(mask_gt_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+
+num_images_to_process = len(image_files)
+print(f"Processing {num_images_to_process} images.")
+```
+
+- The script scans the directories and retrieves all image and mask files.
+- Only files with extensions `.png`, `.jpg`, or `.jpeg` are considered.
+
+### **4. Region Growing Segmentation**
+
+```python
+import cv2
+import numpy as np
+
+def region_growing(image, seed, threshold=15):
+    """
+    Perform region growing segmentation.
+    - image: Grayscale input image
+    - seed: (x, y) starting point
+    - threshold: Maximum intensity difference allowed for region growing
+    """
+    h, w = image.shape
+    segmented = np.zeros_like(image, dtype=np.uint8)
+    visited = np.zeros_like(image, dtype=np.uint8)
     
+    stack = [seed]  # Start with the given seed pixel
+    initial_intensity = image[seed]  # Get seed intensity
+
+    while stack:
+        x, y = stack.pop()
+        
+        if visited[x, y] == 1:
+            continue  # Skip already visited pixels
+        
+        visited[x, y] = 1  # Mark as visited
+        
+        # Check if intensity difference is within threshold
+        if abs(int(image[x, y]) - int(initial_intensity)) <= threshold:
+            segmented[x, y] = 255  # Mark as foreground
+            
+            # Add 4-neighbor pixels (ensure within image bounds)
+            if x > 0: stack.append((x-1, y))
+            if x < h-1: stack.append((x+1, y))
+            if y > 0: stack.append((x, y-1))
+            if y < w-1: stack.append((x, y+1))
+    
+    return segmented
+```
+
+- **Region Growing Algorithm**:
+  - Starts from a **seed pixel**.
+  - Grows the region based on **intensity similarity**.
+  - Expands to neighboring pixels within a **threshold**.
+  - Stops when no more pixels meet the criteria.
+
+### **5. Computing IoU and Evaluating Segmentation**
+
+```python
+from tqdm import tqdm
+from sklearn.metrics import jaccard_score
+
+ious = []
+best_iou = 0
+best_image = None
+
+num_images = len(image_files)  
+
+for i in tqdm(range(num_images), total=num_images):
+    img_name = image_files[i]
+    mask_name = mask_files[i]
+    
+    img_path = os.path.join(image_folder, img_name)
+    mask_path = os.path.join(mask_gt_folder, mask_name)
+    
+    img = cv2.imread(img_path, cv2.IMREAD_GRAYSCALE)  # Read in grayscale
+    mask_gt = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)  # Ground truth mask
+    
+    if img.shape != mask_gt.shape:
+        mask_gt = cv2.resize(mask_gt, (img.shape[1], img.shape[0]))
+
+    mask_gt = (mask_gt > 127).astype(np.uint8)  # Convert to binary
+    seed = (img.shape[0]//2, img.shape[1]//2)
+
+    segmented_mask = region_growing(img, seed)
+
+    segmented_binary = (segmented_mask > 127).astype(np.uint8)
+    iou = jaccard_score(mask_gt.flatten(), segmented_binary.flatten(), average='binary')
+    ious.append(iou)
+
+    if iou > best_iou:
+        best_iou = iou
+        best_image = (img, segmented_mask, mask_gt, img_name)
+
+    output_path = os.path.join(region_growing_output_folder, img_name)
+    cv2.imwrite(output_path, segmented_mask)
+```
+
+- Computes **Intersection over Union (IoU)**.
+- Identifies the **best-segmented image**.
+- Saves the **segmentation output**.
+
+### **6. Displaying Results**
+
+```python
+import matplotlib.pyplot as plt
+
+mean_iou = np.mean(ious)
+print(f"Mean IoU for Region Growing on images: {mean_iou:.4f}")
+
+if best_image:
+    img, segmented_mask, mask_gt, img_name = best_image
+    plt.figure(figsize=(12, 4))
+    plt.subplot(1, 3, 1)
+    plt.imshow(img, cmap='gray')
+    plt.title("Original Image")
+    plt.axis("off")
+
+    plt.subplot(1, 3, 2)
+    plt.imshow(segmented_mask, cmap='gray')
+    plt.title("Region Growing Segmentation")
+    plt.axis("off")
+
+    plt.subplot(1, 3, 3)
+    plt.imshow(mask_gt, cmap='gray')
+    plt.title("Ground Truth Mask")
+    plt.axis("off")
+
+    plt.suptitle(f"Best Segmentation - {img_name} (IoU: {best_iou:.4f})")
+    plt.show()
+```
+
+- Displays the **original image**, **segmented mask**, and **ground truth mask**.
+- Shows the **best segmentation result**.
+
+---
+
+## **Summary**
+
+- Implemented **region growing segmentation**.
+- Used **seed selection** and **intensity thresholding**.
+- Computed **IoU** to evaluate results.
+- **Mean IoU obtained: 0.11**.
+- **Experimented with different parameters**, but **results remained low**.
+- **Possible reasons for low IoU**:
+  - Poor seed selection.
+  - High intensity variations.
+- **Next Step**: **Switching to GrabCut algorithm for improved segmentation**.
+
+# **2.Region Segmentation Using GrabCut**
+
+
+
+## **Implementation Details**
+
+### **1. Mounting Google Drive**
+
+```python
+from google.colab import drive
+drive.mount('/content/drive')
+```
+
+- Google Drive is mounted to access image files stored in the cloud.
+- This allows easy retrieval and storage of segmentation results.
+
+### **2. Defining Paths for Input and Output Data**
+
+```python
+import os
+
+# Paths
+image_folder = "/content/drive/MyDrive/MSFD/1/face_crop/"
+mask_gt_folder = "/content/drive/MyDrive/MSFD/1/face_crop_segmentation/"
+grabcut_output_folder = "/content/drive/MyDrive/MSFD/1/grabcut_masks/"
+
+os.makedirs(grabcut_output_folder, exist_ok=True)
+```
+
+- The **image_folder** stores images of faces.
+- The **mask_gt_folder** stores ground truth segmentation masks.
+- The **grabcut_output_folder** is created to store the segmentation results.
+
+### **3. Listing Image and Mask Files**
+
+```python
+image_files = [f for f in os.listdir(image_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+mask_files = [f for f in os.listdir(mask_gt_folder) if f.lower().endswith(('.png', '.jpg', '.jpeg'))]
+
+num_images_to_process = len(image_files)
+print(f"Processing {num_images_to_process} images.")
+```
+
+- The script scans the directories and retrieves all image and mask files.
+- Only files with extensions `.png`, `.jpg`, or `.jpeg` are considered.
+
+### **4. GrabCut Segmentation**
+
+```python
+import cv2
+import numpy as np
+
+def apply_grabcut(image):
+    """
+    Apply GrabCut algorithm for segmentation.
+    - image: Input image in BGR format
+    """
+    mask = np.zeros(image.shape[:2], np.uint8)
+    
+    bgd_model = np.zeros((1, 65), np.float64)
+    fgd_model = np.zeros((1, 65), np.float64)
+    
+    height, width = image.shape[:2]
+    rect = (int(width * 0.1), int(height * 0.1), int(width * 0.8), int(height * 0.8))
+    
+    cv2.grabCut(image, mask, rect, bgd_model, fgd_model, 5, cv2.GC_INIT_WITH_RECT)
+    
+    mask = np.where((mask == 2) | (mask == 0), 0, 1).astype('uint8')
+    segmented_image = image * mask[:, :, np.newaxis]
+    
+    return segmented_image, mask * 255
+```
+
+- **GrabCut Algorithm**:
+  - Uses **iterative graph cuts** for foreground extraction.
+  - Requires an **initial bounding box** around the object.
+  - Separates foreground and background by **energy minimization**.
+
+### **5. Computing IoU and Evaluating Segmentation**
+
+```python
+from tqdm import tqdm
+from sklearn.metrics import jaccard_score
+
+ious = []
+best_iou = 0
+best_image = None
+
+num_images = len(image_files)
+
+for i in tqdm(range(num_images), total=num_images):
+    img_name = image_files[i]
+    mask_name = mask_files[i]
+    
+    img_path = os.path.join(image_folder, img_name)
+    mask_path = os.path.join(mask_gt_folder, mask_name)
+    
+    img = cv2.imread(img_path)
+    mask_gt = cv2.imread(mask_path, cv2.IMREAD_GRAYSCALE)
+    
+    if img.shape[:2] != mask_gt.shape:
+        mask_gt = cv2.resize(mask_gt, (img.shape[1], img.shape[0]))
+    
+    mask_gt = (mask_gt > 127).astype(np.uint8)
+    segmented_image, segmented_mask = apply_grabcut(img)
+    
+    segmented_binary = (segmented_mask > 127).astype(np.uint8)
+    iou = jaccard_score(mask_gt.flatten(), segmented_binary.flatten(), average='binary')
+    ious.append(iou)
+    
+    if iou > best_iou:
+        best_iou = iou
+        best_image = (img, segmented_mask, mask_gt, img_name)
+    
+    output_path = os.path.join(grabcut_output_folder, img_name)
+    cv2.imwrite(output_path, segmented_mask)
+```
+
+- Computes **Intersection over Union (IoU)**.
+- Identifies the **best-segmented image**.
+- Saves the **segmentation output**.
+
+### **6. Displaying Results**
+
+```python
+import matplotlib.pyplot as plt
+
+mean_iou = np.mean(ious)
+print(f"Mean IoU for GrabCut on images: {mean_iou:.4f}")
+
+if best_image:
+    img, segmented_mask, mask_gt, img_name = best_image
+    plt.figure(figsize=(12, 4))
+    plt.subplot(1, 3, 1)
+    plt.imshow(cv2.cvtColor(img, cv2.COLOR_BGR2RGB))
+    plt.title("Original Image")
+    plt.axis("off")
+
+    plt.subplot(1, 3, 2)
+    plt.imshow(segmented_mask, cmap='gray')
+    plt.title("GrabCut Segmentation")
+    plt.axis("off")
+
+    plt.subplot(1, 3, 3)
+    plt.imshow(mask_gt, cmap='gray')
+    plt.title("Ground Truth Mask")
+    plt.axis("off")
+
+    plt.suptitle(f"Best Segmentation - {img_name} (IoU: {best_iou:.4f})")
+    plt.show()
+```
+
+- Displays the **original image**, **segmented mask**, and **ground truth mask**.
+- Shows the **best segmentation result**.
+
+---
+
+### **Summary**
+
+- Implemented **GrabCut segmentation**.
+- Used **bounding box initialization**.
+- Computed **IoU** to evaluate results.
+- **Mean IoU obtained: 0.4** (higher than region growing).
+- **Improvements over Region Growing**:
+  - GrabCut **adapts better** to object boundaries.
+  - **Less sensitive** to initial conditions.
+  - Works well with **complex textures**.
+-Even this is working better than growing region technique but it is getting medium level accuracy , which is not enough for segmentation tasks , so we have to use cnn based algorithms for segmenting.
+
+
     
       
       
