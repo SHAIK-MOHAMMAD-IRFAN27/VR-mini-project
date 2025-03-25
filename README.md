@@ -245,7 +245,7 @@ The tasl is yo classify the images of people with_mask and without_mask.The CNN 
 4. __RMSPROP__ also worked well but not as good as __ADADELTA__ because it has the initialization of learning rate issues . 
 
 ### CONCLUSION :
-
+__CNN__ is used for Classification tasks without the need of any hand crafted feature_extraction . __Adaptive learning_rate__ works great for most of the tasks . __SoftMax__ is used for __multi-class__ classification and __Sigmoid__ used for __binary__ classification . __Leaky Relu__ is used not to saturate even in the negative values of weights while __Relu__ saturates for negative weights.
 
 
 
