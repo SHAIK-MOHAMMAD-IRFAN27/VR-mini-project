@@ -622,6 +622,10 @@ if best_image:
       
 -------------------------------------------------------------------------------------------------
 
+
+
+
+
 ## TASK 4 :IMAGE SEGMENTATION USING U-NET CNN ARCHITECTURE
 
 ### INTRODUCTION :
@@ -714,9 +718,111 @@ U-net is a convolutional neural network which is used for image segmetation . It
         np.save(save_path, images_array)  # Save as .npy file
         print(f"Images saved to {save_path}")
     return images_array
+  save_path1 = '/content/drive/MyDrive/non_segmented_images.npy'
+  save_path2 = '/content/drive/MyDrive/segmented_images.npy'
+  non_segmented_images = load_images(non_segmented_dir,save_path=save_path1)
+  segmented_images = load_images(segmented_dir,save_path=save_path2)   
 - Now scale the pixels 0--1 by dividing with 255.0
+  ```sh
+  segmented_images = segmented_images / 255.0
+  non_segmented_images = non_segmented_images / 255.0
 - As the output should by in the 128x128x1 dimensions , but the face_crop_segmentation has 3 cannels . so, do the average of 3 RGB channels .
+  ```sh
+  segmented_images = np.mean(segmented_images, axis=-1,keepdims=True) 
 - Now , do the dataset splitting . Training data --> 70% validation-->30%
   ```sh
+  from sklearn.model_selection import train_test_split
+  X_train, X_temp, y_train, y_temp = train_test_split(non_segmented_images, segmented_images, test_size=0.2, random_state=42)
+- Now build the U-net model.
+  ```sh
+  import tensorflow as tf
   
-    
+  inputs = tf.keras.layers.Input((IMG_HEIGHT, IMG_WIDTH, IMG_CHANNELS))
+  
+  c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(inputs)
+  c1 = tf.keras.layers.Dropout(0.1)(c1)
+  c1 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c1)
+  p1 = tf.keras.layers.MaxPooling2D((2, 2))(c1)
+  
+  c2 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p1)
+  c2 = tf.keras.layers.Dropout(0.1)(c2)
+  c2 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c2)
+  p2 = tf.keras.layers.MaxPooling2D((2, 2))(c2)
+  
+  c3 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p2)
+  c3 = tf.keras.layers.Dropout(0.2)(c3)
+  c3 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c3)
+  p3 = tf.keras.layers.MaxPooling2D((2, 2))(c3)
+  
+  c4 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p3)
+  c4 = tf.keras.layers.Dropout(0.2)(c4)
+  c4 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c4)
+  p4 = tf.keras.layers.MaxPooling2D(pool_size=(2, 2))(c4)
+  
+  c5 = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(p4)
+  c5 = tf.keras.layers.Dropout(0.3)(c5)
+  c5 = tf.keras.layers.Conv2D(256, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c5)
+  
+  u6 = tf.keras.layers.Conv2DTranspose(128, (2, 2), strides=(2, 2), padding='same')(c5)
+  u6 = tf.keras.layers.concatenate([u6, c4])
+  c6 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u6)
+  c6 = tf.keras.layers.Dropout(0.2)(c6)
+  c6 = tf.keras.layers.Conv2D(128, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c6)
+  
+  u7 = tf.keras.layers.Conv2DTranspose(64, (2, 2), strides=(2, 2), padding='same')(c6)
+  u7 = tf.keras.layers.concatenate([u7, c3])
+  c7 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u7)
+  c7 = tf.keras.layers.Dropout(0.2)(c7)
+  c7 = tf.keras.layers.Conv2D(64, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c7)
+  
+  u8 = tf.keras.layers.Conv2DTranspose(32, (2, 2), strides=(2, 2), padding='same')(c7)
+  u8 = tf.keras.layers.concatenate([u8, c2])
+  c8 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u8)
+  c8 = tf.keras.layers.Dropout(0.1)(c8)
+  c8 = tf.keras.layers.Conv2D(32, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c8)
+  
+  u9 = tf.keras.layers.Conv2DTranspose(16, (2, 2), strides=(2, 2), padding='same')(c8)
+  u9 = tf.keras.layers.concatenate([u9, c1], axis=3)
+  c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(u9)
+  c9 = tf.keras.layers.Dropout(0.1)(c9)
+  c9 = tf.keras.layers.Conv2D(16, (3, 3), activation='relu', kernel_initializer='he_normal', padding='same')(c9)
+  
+  outputs = tf.keras.layers.Conv2D(1, (1, 1), activation='sigmoid')(c9)
+  
+  model = tf.keras.Model(inputs=[inputs], outputs=[outputs])
+  model.compile(optimizer=Adam(learning_rate=1e-4), loss=dice_loss, metrics=['accuracy',iou_metric])
+  model.summary()
+
+- Check the shape of inputs and outputs .
+  ```sh
+  print(type(X_train), X_train.shape)
+  print(type(y_train), y_train.shape)
+
+- Now , fit the X_train and y_train .
+  ```sh
+  history = model.fit(
+    X_train, 
+    y_train,  
+    batch_size=32,
+    epochs=15,
+    validation_data=(X_temp,y_temp),  
+)
+
+- I've used Intersection_over_union as my Mertic along with accuracy and loss as dice_loss
+- As we go through in process , the accuracy decreases or stays as it is since , here each pixel is being classified as foreground and background not the image which is commonly done in CNN's.
+  ```sh
+  def dice_loss(y_true, y_pred):
+    smooth = 1e-6
+    y_true_f = tf.keras.backend.flatten(y_true)
+    y_pred_f = tf.keras.backend.flatten(y_pred)
+    intersection = tf.reduce_sum(y_true_f * y_pred_f)
+    return 1 - ((2. * intersection + smooth) / (tf.reduce_sum(y_true_f) + tf.reduce_sum(y_pred_f) + smooth))
+  def iou_metric(y_true, y_pred):
+    intersection = tf.keras.backend.sum(y_true * y_pred)
+    union = tf.keras.backend.sum(y_true) + tf.keras.backend.sum(y_pred) - intersection
+    return intersection / (union + 1e-6)
+- ndbf
+- 
+  
+
+
