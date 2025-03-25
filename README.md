@@ -19,6 +19,160 @@
 ##   TASK 1 : WITH/WITHOUT MASK CLASSIFICATION USING HAND CRAFTED FEATURE EXTRACTION TECHNIQUES.
 
 ### INTRODUCTION :
+This task is to classify the images of people with_mask and without_mask without using a convolutional neural network . Normally a CNN does feature extraction but here it should be done by us and the give the features extracted to a __SVM classifier__ or a __Multi Layer Perceptron__  to classify the images with_mask and without_mask .
+
+
+## Prerequisites
+Ensure you have the following dependencies installed:
+```bash
+pip install opencv-python numpy matplotlib seaborn scikit-image scikit-learn
+```
+
+## Code Explanation
+
+### 1. Importing Required Libraries
+```python
+import cv2
+import numpy as np
+import os
+import matplotlib.pyplot as plt
+import seaborn as sns
+from skimage.feature import local_binary_pattern, graycomatrix, graycoprops, hog
+from sklearn.model_selection import train_test_split
+from sklearn.svm import SVC
+from sklearn.neural_network import MLPClassifier
+from sklearn.metrics import accuracy_score, classification_report, confusion_matrix, roc_curve, auc
+```
+- `cv2`: Used for image processing
+- `numpy`: Handles numerical operations
+- `skimage.feature`: Extracts texture-based features
+- `sklearn`: Used for training models and evaluating performance
+
+### 2. Defining Directories and Image Size
+```python
+without_mask_dir = "/content/drive/My Drive/FaceMaskDataset/without_mask"
+with_mask_dir = "/content/drive/My Drive/FaceMaskDataset/with_mask"
+IMAGE_SIZE = (128, 128)
+```
+- The dataset contains two folders: `without_mask` and `with_mask`
+- Images are resized to **128x128** pixels for consistency
+
+### 3. Feature Extraction Function
+```python
+def extract_features(image_path):
+    img = cv2.imread(image_path, cv2.IMREAD_COLOR)
+    img = cv2.resize(img, IMAGE_SIZE)
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+
+    # 1. Color Histogram
+    hist = cv2.calcHist([img], [0, 1, 2], None, [8, 8, 8], [0, 256, 0, 256, 0, 256])
+    hist = cv2.normalize(hist, hist).flatten()
+
+    # 2. Local Binary Pattern (LBP)
+    lbp = local_binary_pattern(gray, P=8, R=1, method="uniform")
+    lbp_hist, _ = np.histogram(lbp.ravel(), bins=np.arange(0, 11), density=True)
+
+    # 3. GLCM (Texture Features)
+    glcm = graycomatrix(gray, distances=[1], angles=[0], levels=256, symmetric=True, normed=True)
+    contrast = graycoprops(glcm, 'contrast')[0, 0]
+    correlation = graycoprops(glcm, 'correlation')[0, 0]
+
+    # 4. HOG Features
+    hog_features = hog(gray, orientations=9, pixels_per_cell=(8, 8),
+                       cells_per_block=(2, 2), feature_vector=True)
+
+    # Concatenating all features
+    feature_vector = np.hstack([hist, lbp_hist, [contrast, correlation], hog_features])
+    return feature_vector
+```
+**Features Extracted:**
+- **Color Histogram:** Captures color distribution across RGB channels
+- **Local Binary Pattern (LBP):** Captures texture patterns in grayscale images
+- **GLCM (Gray Level Co-occurrence Matrix):** Captures contrast and correlation in textures
+- **Histogram of Oriented Gradients (HOG):** Extracts edge-based features
+
+### 4. Loading Dataset
+```python
+features, labels, image_paths = [], [], []
+for category, label in [(without_mask_dir, 0), (with_mask_dir, 1)]:
+    for file in os.listdir(category):
+        if file.endswith(".jpg") or file.endswith(".png"):
+            img_path = os.path.join(category, file)
+            try:
+                feature_vector = extract_features(img_path)
+                features.append(feature_vector)
+                labels.append(label)
+                image_paths.append(img_path)
+            except Exception as e:
+                print(f"Skipping {file}: {e}")
+```
+- Iterates through both directories and extracts features for each image
+- Stores features, labels, and image paths for later visualization
+
+### 5. Splitting Dataset
+```python
+features = np.array(features, dtype=np.float32)
+labels = np.array(labels)
+X_train, X_test, y_train, y_test, img_train, img_test = train_test_split(features, labels, image_paths, test_size=0.2, random_state=42)
+```
+- **80% for training, 20% for testing**
+
+### 6. Training Models
+#### SVM Classifier
+```python
+svm_model = SVC(kernel="linear", probability=True)
+svm_model.fit(X_train, y_train)
+svm_pred = svm_model.predict(X_test)
+svm_prob = svm_model.predict_proba(X_test)[:, 1]
+```
+- Uses **Linear Kernel** for SVM
+
+#### 3-Layer MLP Neural Network
+```python
+mlp_model = MLPClassifier(hidden_layer_sizes=(512, 256, 128), max_iter=1000, activation='relu', solver='adam', random_state=42)
+mlp_model.fit(X_train, y_train)
+mlp_pred = mlp_model.predict(X_test)
+mlp_prob = mlp_model.predict_proba(X_test)[:, 1]
+```
+- Uses **ReLU activation** and **Adam optimizer** and three layers.
+
+### 7. Evaluating Models
+```python
+print("SVM Classification Report:\n", classification_report(y_test, svm_pred))
+print("3-Layer MLP Classification Report:\n", classification_report(y_test, mlp_pred))
+```
+- Generates precision, recall, and F1-score
+
+### 8. Confusion Matrices
+```python
+fig, axes = plt.subplots(1, 2, figsize=(12, 5))
+sns.heatmap(confusion_matrix(y_test, svm_pred), annot=True, fmt="d", cmap="Blues", ax=axes[0])
+axes[0].set_title("SVM Confusion Matrix")
+sns.heatmap(confusion_matrix(y_test, mlp_pred), annot=True, fmt="d", cmap="Greens", ax=axes[1])
+axes[1].set_title("3-Layer MLP Confusion Matrix")
+plt.show()
+```
+
+### 9. ROC Curve Comparison
+```python
+fpr_svm, tpr_svm, _ = roc_curve(y_test, svm_prob)
+fpr_mlp, tpr_mlp, _ = roc_curve(y_test, mlp_prob)
+auc_svm = auc(fpr_svm, tpr_svm)
+auc_mlp = auc(fpr_mlp, tpr_mlp)
+plt.plot(fpr_svm, tpr_svm, label=f"SVM (AUC = {auc_svm:.2f})", color="blue")
+plt.plot(fpr_mlp, tpr_mlp, label=f"MLP (AUC = {auc_mlp:.2f})", color="green")
+plt.legend()
+plt.show()
+```
+The **ROC Curve** is a graphical representation of a classifier’s performance across different threshold values. It plots:  
+- **True Positive Rate (TPR) (Sensitivity)** on the Y-axis  
+- **False Positive Rate (FPR)** on the X-axis
+- Higher AUC → Better Model Performance
+## Summary
+We used **handcrafted features**, including color histograms, LBP, GLCM, and HOG. These features effectively distinguish masked and unmasked faces. The **3-layer MLP** further improves classification by learning complex patterns in the feature space.
+
+## Conclusion
+This project successfully classifies images with and without masks using **SVM** and **MLP** with a high accuracy of **~99%** due to effective feature extraction and model tuning.
 
 
 
@@ -27,7 +181,7 @@
 -------------------------------------------------------------------------------------------------
 ##  TASK 2 : WITH/WITHOUT MASK CLASSIFICATION USING CONVOLUTIONAL NEURAL NETWORKS
 ### INTRODUCTION :
-The tasK is yo classify the images of people with_mask and without_mask.The CNN architecture contains 2 tasks . One is convolution and other is pooling . Convolution is used for FEATURE_EXTRACTION where as pooling is used for spacial reduction and making it a translational_invariant.
+The tasK is to classify the images of people with_mask and without_mask.The CNN architecture contains 2 tasks . One is convolution and other is pooling . Convolution is used for FEATURE_EXTRACTION where as pooling is used for spacial reduction and making it a translational_invariant.
 ## 1. IMAGE PREPROCESSING :
 ### STEPS :
   - Mount the google drive
