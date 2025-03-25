@@ -3,7 +3,8 @@
 -------------------------------------------------------------------------------------------------
 
 ##  TASK 2 : WITH/WITHOUT MASK CLASSIFICATION USING CONVOLUTIONAL NEURAL NETWORKS
-The tasl is yo classify the images of people with_mask and without_mask.The CNN architecture contains 2 tasks . One is convolution and other is pooling . Convolution is used for FEATURE_EXTRACTION where as pooling is used for spacial reduction and making it a translational_invariant.
+### INTRODUCTION :
+The tasK is yo classify the images of people with_mask and without_mask.The CNN architecture contains 2 tasks . One is convolution and other is pooling . Convolution is used for FEATURE_EXTRACTION where as pooling is used for spacial reduction and making it a translational_invariant.
 ## 1. IMAGE PREPROCESSING :
 ### STEPS :
   - Mount the google drive
@@ -619,3 +620,103 @@ if best_image:
     
       
       
+-------------------------------------------------------------------------------------------------
+
+## TASK 4 :IMAGE SEGMENTATION USING U-NET CNN ARCHITECTURE
+
+### INTRODUCTION :
+U-net is a convolutional neural network which is used for image segmetation . It was introduced in 2015 .The name U-net comes from it's __U__ shaped architecture with symmetric encoder-decoder structure. In the encoder side we do the contraction and on the decoder side we do the expansion . We also use the skip connections to the decoder layer from the corresponding encoder layer . In the Unet each pixel is categorized as fore-ground and back-ground .
+
+### DATASET :
+ - The dataset contains face_crop and face_crop segmented folders which are the segmented and corresponding  non-segmented images of a person with mask .
+ - The face_crop directory is the X and face_crop_segmentation directory is the target Y.
+### WORKING :
+ - U-Net is a seguence of __conv-conv-pooling__ layers.It has 2 parts . Left side--> contraction , right_side--> expansion paths.
+ - In the left side the unet extracts important features . Convolution detects small patterns like edges textures (nose,ears,mouthetc.,.) and pooling reduces the image size to maintain __translational invariance__ .
+ - As the image goes deeper , more features will be extraxcted .
+ - At the botle neck, U-net has high feature representations . But the model might have forgotten about the borders of the objects etc.,. So, we do the expansion part.
+ - During expansion, we try to restore the image borders , but it will be more boxed and pixelled . so , we use the previous memory from the encoder and add a skip connection to the corresponding decoder part to retain the information lost .
+ - Now , the edges are deceted sharply .
+ - And in the end each pixel is classified as foreground and background . If the pixel is like for suppose mask, then it will be 255 , else its 0.
+
+
+# CODE :
+- Mount the google drive .
+  ```sh
+  from google.colab import drive
+  drive.mount('/content/drive')
+- Install and import all the dependencies .
+  ```sh
+  import tensorflow as tf
+  import os
+  import cv2
+  import imghdr
+  from google.colab.patches import cv2_imshow
+  import numpy as np
+  from matplotlib import pyplot as plt
+  import numpy as np
+  from sklearn.model_selection import train_test_split
+  from tensorflow.keras.layers import Conv2D, MaxPooling2D, Dense, Flatten,AveragePooling2D,Dropout, BatchNormalization
+  from tensorflow import keras
+  from tensorflow.keras.models import Sequential
+  from tensorflow.keras.preprocessing.image import ImageDataGenerator
+  from tensorflow.keras.regularizers import l2
+  from tensorflow.keras.optimizers import Adam
+  from tensorflow.keras.callbacks import ReduceLROnPlateau
+
+- We have 3 paths . Data_dir , segmented_dir and non_segmented_dir.
+  ```sh
+  data_dir="/content/drive/My Drive/VR_MINI_C"
+  non_segmented_dir = "/content/drive/My Drive/VR_MINI_C/face_crop"
+  segmented_dir = "/content/drive/My Drive/VR_MINI_C/face_crop_segmentation"
+- Using this code, i have deleted some images from dataset since it was continuously crashing the session using the below code .
+  ```sh
+  segmented_folder = '/content/drive/My Drive/VR_MINI_C/face_crop_segmentation'
+  non_segmented_folder = '/content/drive/My Drive/VR_MINI_C/face_crop'
+
+  temp_segmented_images = set(os.listdir(segmented_folder))
+  temp_non_segmented_images = set(os.listdir(non_segmented_folder))
+  
+  
+  common_images = temp_segmented_images.intersection(temp_non_segmented_images)
+  
+  for file in temp_segmented_images:
+      if file not in common_images:
+          file_path = os.path.join(segmented_folder, file)
+          os.remove(file_path)
+          print(f'Removed: {file_path}')
+  
+  for file in temp_non_segmented_images:
+      if file not in common_images:
+          file_path = os.path.join(non_segmented_folder, file)
+          os.remove(file_path)
+          print(f'Removed: {file_path}')
+  
+  print("Finished removing unmatched files.")
+
+- Changed my images to 128x128 pixels.
+  ```sh
+  IMG_WIDTH = 128
+  IMG_HEIGHT = 128
+  IMG_CHANNELS = 3
+- In order to load images to the model, we have to convert it to the np.array form . We do it by using below code and save them to segmented_images and non_segmented_images.
+  ```sh
+  def load_images(image_dir, img_size=(128, 128), save_path=None):
+    images = []
+    for img_name in os.listdir(image_dir):
+      img_path = os.path.join(image_dir, img_name)
+      img = cv2.imread(img_path)
+      img = cv2.resize(img, img_size)  # Resize to target size
+      images.append(img)
+    images_array = np.array(images)
+    # If a save path is provided, save the images array
+    if save_path:
+        np.save(save_path, images_array)  # Save as .npy file
+        print(f"Images saved to {save_path}")
+    return images_array
+- Now scale the pixels 0--1 by dividing with 255.0
+- As the output should by in the 128x128x1 dimensions , but the face_crop_segmentation has 3 cannels . so, do the average of 3 RGB channels .
+- Now , do the dataset splitting . Training data --> 70% validation-->30%
+  ```sh
+  
+    
