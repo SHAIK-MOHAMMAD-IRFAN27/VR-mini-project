@@ -1,9 +1,24 @@
 # VR-MINI_PROJECT
 
+-------------------------------------------------------------------------------------------------
+
+
+
+### DATASET 1:
+- The 1st dataset used for task 1 and 2 contains 2 folders . one folder is with_mask and other folder is without_mask .
+- with_mask is the folder where the images conatins people with mask and without_mask contains images of people without mask .
+- It's a dataset used for  classification task .
+### DATASET 2 :
+ - The dataset contains face_crop and face_crop segmented folders which are the segmented and corresponding  non-segmented images of a person with mask .
+ - The face_crop directory is the X and face_crop_segmentation directory is the target Y for __UNET__  and also the region based segmentation using traditional techniques.
+ - It also contains img folder but it doesn't have any corresponding segmented images so we didn't used it .
+   
 
 
 -------------------------------------------------------------------------------------------------
+##   TASK 1 : WITH/WITHOUT MASK CLASSIFICATION USING HAND CRAFTED FEATURE EXTRACTION TECHNIQUES.
 
+### INTRODUCTION :
 
 
 ##  TASK 2 : WITH/WITHOUT MASK CLASSIFICATION USING CONVOLUTIONAL NEURAL NETWORKS
