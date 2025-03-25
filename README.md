@@ -1,6 +1,10 @@
 # VR-MINI_PROJECT
 
+
+
 -------------------------------------------------------------------------------------------------
+
+
 
 ##  TASK 2 : WITH/WITHOUT MASK CLASSIFICATION USING CONVOLUTIONAL NEURAL NETWORKS
 ### INTRODUCTION :
@@ -258,7 +262,6 @@ __CNN__ is used for Classification tasks without the need of any hand crafted fe
 
 ## TASK 3 : REGION BASED SEGMENTATION USING TRADITIONAL TECHNIQUES
 
-
 ## **Objective**
 
 ### Implement a region-based segmentation method (e.g., thresholding, edge detection) to segment the mask regions for faces identified as "with mask." Visualize and evaluate the segmentation results.
@@ -440,14 +443,14 @@ if best_image:
 - Implemented **region growing segmentation**.
 - Used **seed selection** and **intensity thresholding**.
 - Computed **IoU** to evaluate results.
-- **Mean IoU obtained: 0.11**.
+- **Mean IoU obtained: 0.1389**.
 - **Experimented with different parameters**, but **results remained low**.
 - **Possible reasons for low IoU**:
   - Poor seed selection.
   - High intensity variations.
 - **Next Step**: **Switching to GrabCut algorithm for improved segmentation**.
 
-# **2.Region Segmentation Using GrabCut**
+# **2.Region Segmentation Using GrabCut (3 Marks)**
 
 
 
@@ -604,12 +607,12 @@ if best_image:
 
 ---
 
-### **Summary**
+## **Summary**
 
 - Implemented **GrabCut segmentation**.
 - Used **bounding box initialization**.
 - Computed **IoU** to evaluate results.
-- **Mean IoU obtained: 0.4** (higher than region growing).
+- **Mean IoU obtained: 0.4637** (higher than region growing).
 - **Improvements over Region Growing**:
   - GrabCut **adapts better** to object boundaries.
   - **Less sensitive** to initial conditions.
@@ -821,8 +824,16 @@ U-net is a convolutional neural network which is used for image segmetation . It
     intersection = tf.keras.backend.sum(y_true * y_pred)
     union = tf.keras.backend.sum(y_true) + tf.keras.backend.sum(y_pred) - intersection
     return intersection / (union + 1e-6)
-- ndbf
-- 
+- I've run the code for 15 epochs .
+- Epoch 15/15 113/113 ━━━━━━━━━━━━━━━━━━━━ 623s 5s/step - accuracy: 0.5685 - iou_metric: 0.7023 - loss: 0.1751 - val_accuracy: 0.5736 - val_iou_metric: 0.6986 - val_loss: 0.1776
+- IOU for the validation data is nearly (~70%) .
+- Normally we say >85% is the best accuracy and used in medical images segmentation .
+- 70-85 % is generally we get accuracy for U net .
+- After this running we get probabilities for each pixel here . If wach pixel is >0.5 the its 255 , else it's 0.
+
+### CONCLUSION :
+By doing this i've learned about the architecture of Unet and got to know how the segmentation is done at each step and each layers and why the skip connections are used and needed for this task . And also got to know why __accuracy__ and  __binary cross entropy__ are the bad metrics and loss functions for U net ,while __IOU score__ and __dice score__  work good .
+  
   
 
 
