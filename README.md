@@ -84,4 +84,19 @@ The tasl is yo classify the images of people with_mask and without_mask.The CNN 
     
   - tf.keras.utils.image_dataset_from_directory is a Tensorflow utility function that helps to load images from directory and create a dataset for training deep learning models .
   - By default we have batch_size=32 and image_size=256x256 , color_mode=RGB
+    ```sh
+    data_iterator=data.as_numpy_iterator()
+  - This converts a tensorflow dataset into a numpy iterator which is used to iterate over the dataset and work with numpy arrays .
+    ```sh
+    batch=data_iterator.next()
+  - This creates batch of our dataset .
+  - Each batch is a tuple containing (images,labels). image.shape= (32,256,256,3) and labels.shape=(32,)
+    ```sh
+    data = data.map(lambda x,y: (x/255, y))
+  - We have to scale the data of images to between 0 and 1 . so divide the data x by 255.0
+  - 
+  - We have to split the data into train , test , validation data with a stratification so that imbalance in data doesn't happen .
+  - To make this .
+    
+    
     
