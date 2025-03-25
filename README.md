@@ -224,7 +224,25 @@ The tasl is yo classify the images of people with_mask and without_mask.The CNN 
   - learning_rate_scheduler = monitor val_loss and if it doesn't chage for 3 epochs decrease the learning rate by a factor of 1/2.
   - accuracy: 0.9926 - loss: 0.3769 - precision_5: 0.9926 - recall_5: 0.9926 - val_accuracy: 0.9600 - val_loss: 0.9102 - val_precision_5: 0.9600 - val_recall_5: 0.9600 - learning_rate: 0.2500
   - Test Accuracy: 0.9700 , Test Precision: 0.9700 ,Test Recall: 0.9700
+-------------------------------------------------------------------------------------------------
 
+- __ReLU__  is commonly used in deep learning due to its simplicity and efficiency in avoiding vanishing gradients.
+
+- __Leaky ReLU__ (Model 2, Model 5) allows small gradients when inputs are negative, which can help in avoiding dead neurons.
+
+- __Tanh__ (Model 4) is less commonly used in CNNs due to saturation issues.
+
+- __Softmax__ (Model 5, Model 6) is used for multi-class classification rather than binary classification.
+- __ADAM__ adapts learning rates for each parameter and usually converges faster and does the bias correction.
+- __SGD WITH MOMENTUM__ helps in reducing oscillations and is generally better for generalization.
+- __RMSprop__  is designed for non-stationary problems and works well in some cases and has initialization issues .
+- __Adagrad__  performs well when dealing with sparse data but can reduce learning rate too aggressively.
+- __Adadelta__  dynamically adapts learning rates without requiring manual tuning as weights will converge faster .
+
+1. Here __ADADELTA__ did best performance because unlike other models it doesn't need the initialization of learning ratr . Even __ADAM__ needs a initial learning rate . This helps the __ADADELTA__ not to over shoot the optima and reach faster than other models .
+2. __ADAM__  models had very high training accuracy (~99%) but much lower test accuracy because its adaptive , it speed ups the convergence but can lead to overfitting with 22Million parameters . And other reason was the __initial learning rate=0.001__ which was very high .
+3. __SGD MOMENTUM__ worked well because momentum = 0.9 means each time we are telling it to move in the direction of the gradient with 0.9 confidence means __new_W=old_W + (delta_W+0.9*delta_W )__. But it may have oscillations.
+4. __RMSPROP__ also worked well but not as good as __ADADELTA__ because it has the initialization of learning rate issues . 
 
 
     
